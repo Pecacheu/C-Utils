@@ -1,7 +1,6 @@
 # C++ Utils
-Useful functions for C/C++
-
 Utils: Just a small library I made, used by my other C++ libraries.
+
 Net: Coinvent networking functions for C++.
 
 Requirements for utils:
