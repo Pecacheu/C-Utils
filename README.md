@@ -24,7 +24,7 @@
 ### Error Help
 - `void error(string e)` Print `e` in red.
 - `void error(string f, int c)` Print that error `c` occurred in `f`. Also reads standard error codes from global `errno`.
-- `bool ckErr(int e, string f)` Convenience function to check for errors in a single line. If `e` is negative, the function prints the error using `error(string f, int c)` and returns `true`.
+- `bool ckErr(int e, string f)` Convenience function to check for errors in a single line. If `e` is negative, the function prints the error using `error(string f, int c)` and returns true.
 
 ### [struct] Buffer
 This is arguably the most useful part of the library. These buffers work similar to Node.js buffers, which vastly improves code portability and readability.
@@ -82,9 +82,11 @@ An extremely useful event loop and scheduling system that runs in a single threa
 *Note:* While the event loop is thread-safe, it uses mutexes internally, so please avoid mutex race conditions (ex. your timer function locks the same mutex as the function that is attempting to set/clear it).
 
 ### [class] EventLoop
-- `size_t setTimeout(EVLFunc f, uint64_t ms, void *p=0)` Set timeout `f` with optional data pointer `p`.
-- `size_t setInterval(EVLFunc f, uint64_t ms, void *p=0)` Set interval `f` with optional data pinter `p`.
-- `bool clearTimeout(size_t id); void run(bool ex=0)` `ex` Run EventLoop in current thread. Set `ex` to auto-exit when the queue ends.
+- `EventLoop(size_t max=UTILS_MAX_TIMERS)` Create EventLoop. `max` sets max scheduled timers.
+- `size_t setTimeout(EVLFunc f, uint64_t ms, void *p=0)` Set timeout `f` with optional data pointer `p`. Returns ID, or 0 if queue full.
+- `size_t setInterval(EVLFunc f, uint64_t ms, void *p=0)` Set interval `f` with optional data pinter `p`. Returns ID, or 0 if queue full.
+- `bool clearTimeout(size_t id)` Clear timeout/interval with ID. Returns true if successful.
+- `void run(bool ex=0)` Run EventLoop in current thread. Set `ex` to auto-exit when the queue ends.
 - `void stop()` Stop the EventLoop, causing `run` to exit. Fully thread-safe.
 
 `extern EventLoop GlobalEventLoop` Default, global event loop. Run with `GlobalEventLoop.run()`.

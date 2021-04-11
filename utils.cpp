@@ -1,4 +1,4 @@
-//C++ Utils v2.1, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils, ©2021 Pecacheu; GNU GPL 3.0
 
 #include "utils.h"
 
@@ -148,7 +148,7 @@ string Month[12] = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct",
 string tFill(int t) { string s=to_string(t); return t>9?s:'0'+s; }
 
 string getDate(uint64_t t, bool sec) {
-	if(!t) t=time(0); tm *d = localtime((time_t*)&n); bool p=0;
+	if(!t) t=time(0); tm *d=localtime((time_t*)&t); bool p=0;
 	int h=d->tm_hour; if(h>=12) p=1; if(h>12) h-=12; else if(h==0) h=12;
 	return to_string(d->tm_year+1900)+' '+Month[d->tm_mon]+' '+tFill(d->tm_mday)+' '+tFill(h)+':'
 	+tFill(d->tm_min)+(sec?':'+tFill(d->tm_sec):"")+(p?" PM":" AM");
@@ -172,16 +172,16 @@ void EventLoop::stop() { rl=0; }
 
 size_t EventLoop::setTimeout(EVLFunc f, uint64_t ms, void *p) {
 	if(!f||!rl) return 0; uint64_t t=ms+msTime(); size_t n=0; lck.lock();
-	auto e=ev.end(); while(n<UTILS_MAX_TIMERS) if(ev.find(++n) == e) break;
-	if(n == UTILS_MAX_TIMERS) { lck.unlock(); return 0; }
+	auto e=ev.end(); while(n<max) if(ev.find(++n) == e) break;
+	if(n == max) { lck.unlock(); return 0; }
 	ev.emplace(piecewise_construct,forward_as_tuple(n),forward_as_tuple(f,t,p,0));
 	lck.unlock(); return n;
 }
 
 size_t EventLoop::setInterval(EVLFunc f, uint64_t ms, void *p) {
 	if(!f||!ms||!rl) return 0; uint64_t t=ms+msTime(); size_t n=0; lck.lock();
-	auto e=ev.end(); while(n<UTILS_MAX_TIMERS) if(ev.find(++n) == e) break;
-	if(n == UTILS_MAX_TIMERS) { lck.unlock(); return 0; }
+	auto e=ev.end(); while(n<max) if(ev.find(++n) == e) break;
+	if(n == max) { lck.unlock(); return 0; }
 	ev.emplace(piecewise_construct,forward_as_tuple(n),forward_as_tuple(f,t,p,ms));
 	lck.unlock(); return n;
 }

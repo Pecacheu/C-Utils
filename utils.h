@@ -1,4 +1,4 @@
-//C++ Utils v2.1, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.1.1, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>
@@ -66,7 +66,7 @@ const char *strCpy(const char *s);
 const char *strCpy(const char *s, size_t max);
 void strCpy(char *d, const char *s, size_t max);
 
-const char bChar64[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const char bChar64[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 //Node.js Buffers
 struct Buffer {
@@ -80,7 +80,7 @@ struct Buffer {
 	inline const char *toCStr() { return nul?buf:strCpy(buf,len); }
 	const char *toBase64(); bool match(const char *s); bool matchPart(const char *s, size_t ofs=0);
 	inline char& operator[](size_t i){ return (char&)buf[i]; }
-	inline void operator=(Buffer& b):buf(b.buf),len(b.len),nul(b.nul) {}
+	inline void operator=(Buffer& b) { buf=b.buf,len=b.len,nul=b.nul; }
 	const char *buf; size_t len; bool nul;
 };
 
@@ -109,7 +109,7 @@ string toQuery(stringmap m);
 
 //JavaScript Time & Event Loop
 uint64_t usTime(); uint64_t msTime();
-string getDate(uint64_t n=0, bool sec=0);
+string getDate(uint64_t t=0, bool sec=0);
 
 
 struct EVData {
@@ -118,15 +118,16 @@ struct EVData {
 };
 class EventLoop {
 	public:
+	EventLoop(size_t m=UTILS_MAX_TIMERS):max(m) {}
 	size_t setTimeout(EVLFunc f, uint64_t ms, void *p=0);
 	size_t setInterval(EVLFunc f, uint64_t ms, void *p=0);
 	bool clearTimeout(size_t id); void run(bool ex=0);
 	void stop(); private: volatile bool rl=0;
 	mutex lck; unordered_map<size_t,EVData> ev;
+	const size_t max;
 };
 
 extern EventLoop GlobalEventLoop;
-inline bool runImmediate(EVLFunc f, void *p=0) { return GlobalEventLoop.setTimeout(f,0,p) != 0; }
 inline size_t setTimeout(EVLFunc f, uint64_t ms, void *p=0) { return GlobalEventLoop.setTimeout(f,ms,p); }
 inline size_t setInterval(EVLFunc f, uint64_t ms, void *p=0) { return GlobalEventLoop.setInterval(f,ms,p); }
 inline bool clearTimeout(size_t id) { return GlobalEventLoop.clearTimeout(id); }
