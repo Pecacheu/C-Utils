@@ -43,11 +43,10 @@ Socket netAccept(int srv, bool nb) {
 	return Socket(srv,sck,NetAddr(as,ntohs(addr.sin_port)));
 }
 
-Socket netConnect(NetAddr a, char nb) {
+Socket netConnect(NetAddr a, bool nb) {
 	int sck = socket(AF_INET, SOCK_STREAM, 0); if(sck < 0) return Socket(-1);
-	if(nb==2) setNb(sck);
 	if(connect(sck, (sockaddr *)a.a, AddrLen)) { close(sck); return Socket(-2); }
-	if(nb==1) setNb(sck); return Socket(0,sck,a);
+	if(nb) setNb(sck); return Socket(0,sck,a);
 }
 
 int Socket::setTimeout(time_t sec) {

@@ -6,9 +6,8 @@ namespace utils {
 
 void error(string e) { cerr << "\033[31mError: "+e+"\033[0m\n"; }
 void error(string f, int c) { cerr << "\033[31mError "+to_string(c)+" in "+f+": "+to_string(errno)+" "+strerror(errno)+"\033[0m\n"; }
-bool ckErr(int e, string f) { if(e < 0) { error(f,e); return 1; } return 0; }
+bool ckErr(int e, string f) { if(e<0) { error(f,e); return 1; } return 0; }
 
-const char bChar64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-";
 const char *Buffer::toBase64() {
 	if(!len) return ""; size_t i=len; char *b = new char[(len*4/3)+2],*np=b,*p=(char*)buf;
 	while(i >= 3) {
@@ -20,7 +19,7 @@ const char *Buffer::toBase64() {
 		*np++ = bChar64[((*p&0x03)<<4) + (((i>1?*(p+1):0)&0xf0)>>4)];
 		if(i>1) *np++ = bChar64[((*(p+1)&0x0f)<<2)];
 	}
-	*np = 0; return b;
+	*np=0; return b;
 }
 
 bool Buffer::match(const char *s) {
@@ -73,13 +72,13 @@ void replaceAll(string& s, string from, string to) {
 
 string toCamelCase(string s) {
 	char *d=s.data(); for(size_t i=0,l=s.size(); i<l; i++)
-		if(!i || d[i-1] == '-') d[i]=toupper(d[i]);
+		if(!i || d[i-1] == '-' || d[i-1] == ' ') d[i]=toupper(d[i]); else d[i]=toupper(d[i]);
 	return s;
 }
 
 const regex uriEsc("%[0-9A-F]{2}");
 string decodeURIComponent(string s) {
-	string::iterator i = s.begin(); match_results<string::iterator> m;
+	string::iterator i=s.begin(); match_results<string::iterator> m;
 	while(regex_search(i, s.end(), m, uriEsc)) {
 		size_t n = hexStrToUint(m.str().substr(1));
 		if((n == 10 || n >= 32) && n != string::npos) {
@@ -91,14 +90,14 @@ string decodeURIComponent(string s) {
 }
 
 stringmap fromQuery(string s) {
-	if(startsWith(s,"?")) s = s.substr(1);
+	if(startsWith(s,"?")) s=s.substr(1);
 	stringmap m; size_t o=0,n=s.find('&'),q;
 	string p,k,v; while(1) {
 		p=s.substr(o,n==string::npos?string::npos:n-o);
 		q=p.find('='); if(q == string::npos) return stringmap();
 		k=p.substr(0,q), v=p.substr(q+1);
 		if(!k.size() || !v.size()) return stringmap();
-		m[k] = decodeURIComponent(v); if(n == string::npos) return m;
+		m[k]=decodeURIComponent(v); if(n == string::npos) return m;
 		o=n+1, n=s.find('&',o);
 	}
 }
@@ -121,13 +120,18 @@ void strCpy(char *d, const char *s, size_t max) {
 	memcpy(d,s,max); d[max]=0;
 }
 
-bool startsWith(const string& s, const char *t) { for(size_t i=0,l=strlen(t); i<l; i++) if(t[i] != s[i]) return 0; return 1; }
+bool startsWith(const string& s, const char *t) {
+	size_t i=0,l=strlen(t); if(s.size()<l) return 0;
+	for(; i<l; i++) if(t[i] != s[i]) return 0; return 1;
+}
+bool startsWith(const char *s, const char *t) {
+	size_t i=0,l=strlen(t); if(strlen(s)<l) return 0;
+	for(; i<l; i++) if(t[i] != s[i]) return 0; return 1;
+}
 bool endsWith(const string& s, const char *t) {
 	size_t si=s.size(),l=strlen(t),i=0; if(si<l) return 0; si-=l;
 	for(; i<l; i++,si++) if(t[i] != s[si]) return 0; return 1;
 }
-
-bool startsWith(const char *s, const char *t) { for(size_t i=0,l=strlen(t); i<l; i++) if(t[i] != s[i]) return 0; return 1; }
 bool endsWith(const char *s, const char *t) {
 	size_t si=strlen(s),l=strlen(t),i=0; if(si<l) return 0; si-=l;
 	for(; i<l; i++,si++) if(t[i] != s[si]) return 0; return 1;
@@ -143,11 +147,11 @@ uint64_t msTime() {
 string Month[12] = {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"};
 string tFill(int t) { string s=to_string(t); return t>9?s:'0'+s; }
 
-string getDate(uint64_t n, bool sec) {
-	if(!n) n=time(0); tm *t = localtime((time_t*)&n); bool p=0;
-	int h=t->tm_hour; if(h>=12) p=1; if(h>12) h-=12; else if(h==0) h=12;
-	return to_string(t->tm_year+1900)+' '+Month[t->tm_mon]+' '+tFill(t->tm_mday)+' '+tFill(h)+':'
-	+tFill(t->tm_min)+(sec?':'+tFill(t->tm_sec):"")+(p?" PM":" AM");//+(tz?' '+(string)t->tm_zone:"");
+string getDate(uint64_t t, bool sec) {
+	if(!t) t=time(0); tm *d = localtime((time_t*)&n); bool p=0;
+	int h=d->tm_hour; if(h>=12) p=1; if(h>12) h-=12; else if(h==0) h=12;
+	return to_string(d->tm_year+1900)+' '+Month[d->tm_mon]+' '+tFill(d->tm_mday)+' '+tFill(h)+':'
+	+tFill(d->tm_min)+(sec?':'+tFill(d->tm_sec):"")+(p?" PM":" AM");
 }
 
 EventLoop GlobalEventLoop;

@@ -6,9 +6,9 @@
 namespace net {
 
 struct NetAddr {
-	NetAddr(uint16_t port = 0);
-	NetAddr(const char *addr, uint16_t port = 0);
-	static NetAddr *resolve(const char *host, uint16_t port = 80);
+	NetAddr(uint16_t port=0);
+	NetAddr(const char *addr, uint16_t port=0);
+	static NetAddr *resolve(const char *host, uint16_t port=80);
 	const char *host; uint16_t port; void *a;
 };
 
@@ -23,7 +23,7 @@ struct Socket {
 struct Dgram;
 typedef void (*DgramFunc)(Dgram& d, utils::Buffer data, char *addr, uint16_t port);
 struct Dgram {
-	Dgram(size_t buf = 4096, bool nb = 0);
+	Dgram(size_t buf=4096, bool nb=0);
 	inline ssize_t send(NetAddr to, string& s) { return send(to,s.data(),s.size()); }
 	ssize_t send(NetAddr to, const char *buf, size_t len); bool bind(NetAddr a);
 	ssize_t recv(char *buf, size_t size, char **addr, uint16_t *port);
@@ -32,8 +32,8 @@ struct Dgram {
 };
 
 int netStartServer(NetAddr a, int backlog);
-Socket netAccept(int srv, bool nb = 0);
-Socket netConnect(NetAddr a, char nb = 0);
+Socket netAccept(int srv, bool nb=0);
+Socket netConnect(NetAddr a, char nb=0);
 void netClose(int s);
 
 }
