@@ -2,10 +2,10 @@
 **Utils:** A small library with a number of helpful functions\
 **Net:** Small, portable networking library for C++
 
-### Requirements for utils:
+### Dependencies for utils:
 - C++14 & std library (including std::thread)
 
-### Requirements for net:
+### Dependencies for net:
 - Utils.h
 - Unix sys/socket.h (May port to winsock2.h in the future)
 
@@ -15,7 +15,7 @@
 - `ARCH64` True if 64-bit.
 - `WINDOWS` True if Windows.
 - `ARM` Version of ARM Arch, 0 if not ARM.
-- `static_block` Similar to a `static` block in Java.
+- `static_block` Java-style `static` block.
 
 ### Typedefs
 - stringmap `unordered_map<string,string>` JS-style array of strings.
@@ -92,13 +92,18 @@ An extremely useful event loop and scheduling system that runs in a single threa
 `extern EventLoop GlobalEventLoop` Default, global event loop. Run with `GlobalEventLoop.run()`.
 
 ### [class] Append
-This dynamic class can append several data types, including Buffers, integers, strings, and C strings.
+This dynamic class can append several data types, including Buffers, integers, strings, and C strings. Allocation via `new`, delete with `delete[]`.
 - `Buffer Append::buf(...)` Append and return as Buffer.
 - `const char *Append::str(...)` Append and return as C string.
 
 <br>
 
 ## Namespace: net
+
+### Typedefs
+- DgramFunc `void func(Dgram& d, Buffer data, char *addr, uint16_t port)` Used for Dgram callback.
+
+### Functions
 - `int netStartServer(NetAddr a, int backlog)` Start server, listening at address/port `a`. Backlog is the length of the pending connections queue. A negative number is returned on error.
 - `Socket netAccept(int srv, bool nb=0)` Accept a client from the server. `nb` enables non-blocking mode after connection. A Socket with the `err` property set is returned on error.
 - `Socket netConnect(NetAddr a, bool nb=0)` Connect to a server at address/port `a`. `nb` enables non-blocking mode after connection. A Socket with the `err` property set is returned on error.
@@ -130,6 +135,3 @@ Represents a datagram.
 - `onData(NetAddr a, DgramFunc cb)` Listen for data from address/port `a` with data callback `cb`. On error, `cb` is called with `d.err` set.
 - `void close()` Close listener used by `onData`.
 - `int err` Error, if any.
-
-### DgramFunc
-`void func(Dgram& d, Buffer data, char *addr, uint16_t port)`

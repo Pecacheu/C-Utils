@@ -4,6 +4,7 @@
 #include "utils.h"
 
 namespace net {
+using namespace utils;
 
 struct NetAddr {
 	NetAddr(uint16_t port=0);
@@ -21,7 +22,7 @@ struct Socket {
 };
 
 struct Dgram;
-typedef void (*DgramFunc)(Dgram& d, utils::Buffer data, char *addr, uint16_t port);
+typedef void (*DgramFunc)(Dgram& d, Buffer data, char *addr, uint16_t port);
 struct Dgram {
 	Dgram(size_t buf=4096, bool nb=0);
 	inline ssize_t send(NetAddr to, string& s) { return send(to,s.data(),s.size()); }

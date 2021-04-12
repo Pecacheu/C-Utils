@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-using namespace utils;
 namespace net {
 
 socklen_t AddrLen = 0;
