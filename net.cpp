@@ -12,6 +12,7 @@ namespace net {
 socklen_t AddrLen = 0;
 inline void setNb(int s) { fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK); }
 
+NetAddr::~NetAddr() { delete (sockaddr_in*)a; }
 NetAddr::NetAddr(uint16_t port):host(0),port(port) {
 	sockaddr_in *s = new sockaddr_in(); a=s; if(!AddrLen) AddrLen = sizeof(*s);
 	s->sin_family = AF_INET; s->sin_addr.s_addr = INADDR_ANY; s->sin_port = htons(port);
@@ -55,7 +56,7 @@ int Socket::setTimeout(time_t sec) {
 
 ssize_t Socket::read(char *buf, size_t len) { return recv(sck,buf,len,0); }
 ssize_t Socket::write(const char *buf, size_t len) { return send(sck,buf,len,0); }
-void Socket::close() { ::close(sck); }
+void Socket::close() { ::close(sck); if(srv) delete addr.host; }
 void netClose(int s) { close(s); }
 
 //UDP Protocol:
@@ -73,7 +74,7 @@ ssize_t Dgram::recv(char *buf, size_t size, char **addr, uint16_t *port) {
 	ssize_t r = recvfrom(sck, buf, size, MSG_WAITALL, (sockaddr *)&ab, &len);
 	if(r <= 0) return r; len = INET6_ADDRSTRLEN+1; char *as = new char[len];
 	if(!inet_ntop(ab.sin_family,&ab.sin_addr.s_addr,as,len)) return -2;
-	*addr = as; *port = ntohs(ab.sin_port); return r;
+	*addr=as; *port=ntohs(ab.sin_port); return r;
 }
 
 int Dgram::onData(NetAddr a, DgramFunc cb) {
@@ -83,7 +84,7 @@ int Dgram::onData(NetAddr a, DgramFunc cb) {
 		while(dRun) {
 			ssize_t r = recv(dBuf, bs, &addr, &port); if(!dRun) break;
 			if(r <= 0) { err=r?r:-1; cb(*this,Buffer(),0,0); break; }
-			else { err=0; cb(*this,Buffer(dBuf,r),addr,port); }
+			else { err=0; cb(*this,Buffer(dBuf,r,0),addr,port); }
 		}
 	}).detach();
 	return 0;

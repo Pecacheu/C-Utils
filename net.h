@@ -1,4 +1,4 @@
-//C++ Utils v2.1.1, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.2, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include "utils.h"
@@ -8,7 +8,7 @@ using namespace utils;
 
 struct NetAddr {
 	NetAddr(uint16_t port=0);
-	NetAddr(const char *addr, uint16_t port=0);
+	NetAddr(const char *addr, uint16_t port=0); ~NetAddr();
 	static NetAddr *resolve(const char *host, uint16_t port=80);
 	const char *host; uint16_t port; void *a;
 };
@@ -34,7 +34,7 @@ struct Dgram {
 
 int netStartServer(NetAddr a, int backlog);
 Socket netAccept(int srv, bool nb=0);
-Socket netConnect(NetAddr a, char nb=0);
+Socket netConnect(NetAddr a, bool nb=0);
 void netClose(int s);
 
 }

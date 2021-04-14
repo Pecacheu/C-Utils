@@ -1,4 +1,4 @@
-//C++ Utils v2.1.1, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.2, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>
@@ -11,10 +11,12 @@
 #include <sstream>
 #include <vector>
 #include <regex>
+#include <functional>
 
 using namespace std;
 
 #define UTILS_MAX_TIMERS 65536
+#define NPOS string::npos
 
 //64-bit:
 #if _WIN64 || __amd64__ || __aarch64__
@@ -59,7 +61,7 @@ static int var_name __attribute((unused)) = (function_name(), 0) ; static void f
 namespace utils {
 
 typedef unordered_map<string,string> stringmap;
-typedef void(*EVLFunc)(void*);
+typedef function<void(void*)> EVLFunc;
 
 //C String Help
 const char *strCpy(const char *s);
@@ -70,18 +72,19 @@ const char bChar64[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz01
 
 //Node.js Buffers
 struct Buffer {
-	Buffer():buf(0),len(0),nul(0) {}
-	Buffer(const size_t l, bool n=0):buf(l&&l!=string::npos?new char[l]:0),len(l),nul(n) {}
-	Buffer(const char *b, const size_t l, bool n=0):buf(b),len(l),nul(n) {}
-	Buffer(const char *t):buf(t),len(t?strlen(t):0),nul(1) {}
-	Buffer(const string& s):buf(s.data()),len(s.size()),nul(1) {}
+	Buffer(); Buffer(const size_t l);
+	Buffer(const char *b, const size_t l, bool d=1, bool n=0);
+	Buffer(const char *t); Buffer(const string& s);
 	inline string toStr() { return string(buf,len); }
-	inline string toStr(size_t s, size_t l=0) { s=min(s,len-1); return string(buf+s,l?min(l,len-s):len-s); }
-	inline const char *toCStr() { return nul?buf:strCpy(buf,len); }
-	const char *toBase64(); bool match(const char *s); bool matchPart(const char *s, size_t ofs=0);
+	inline string toStr(size_t s, size_t l=0) {
+		s=min(s,len-1); return string(buf+s,l?min(l,len-s):len-s);
+	}
+	const char *toCStr(bool f=0); Buffer copy(size_t nl=0);
+	const char *toBase64(char *b=0); Buffer sub(size_t o, size_t l);
+	bool match(const char *s); bool matchPart(const char *s, size_t ofs=0);
 	inline char& operator[](size_t i){ return (char&)buf[i]; }
-	inline void operator=(Buffer& b) { buf=b.buf,len=b.len,nul=b.nul; }
-	const char *buf; size_t len; bool nul;
+	void operator=(Buffer b); void del();
+	const char *buf,*db; size_t len; bool nul;
 };
 
 void error(string e);
@@ -143,15 +146,15 @@ class Append {
 		vector<Buffer> ref; return run(&ref, arg, args...).buf;
 	}
 	private: static Buffer run(vector<Buffer> *ref) {
-		vector<Buffer>& arr = *ref; size_t al=arr.size(),s=0;
-		for(Buffer& b: arr) s += b.len; char *a=new char[s+1], *o=a;
-		for(Buffer& b: arr) { memcpy(o,b.buf,b.len); o += b.len; }
-		a[s]=0; return Buffer(a,s,1);
+		vector<Buffer>& arr=*ref; size_t al=arr.size(),s=0;
+		for(Buffer& b: arr) s+=b.len; char *a=new char[s+1], *o=a;
+		for(Buffer& b: arr) { memcpy(o,b.buf,b.len); o+=b.len; if(b.db) b.del(); }
+		a[s]=0; return Buffer(a,s,1,1);
 	}
 	template<typename T, typename... U>
 	static Buffer run(vector<Buffer> *ref, const T& arg, const U&... args) {
-		if constexpr(is_same_v<T,Buffer> || is_same_v<T,string>
-			|| is_convertible_v<T,const char *>) ref->emplace_back(arg);
+		if constexpr(is_same_v<T,Buffer> || is_same_v<T,string>) ref->emplace_back(arg);
+		else if constexpr(is_convertible_v<T,const char *>) ref->emplace_back(arg).db=0;
 		else if constexpr(is_convertible_v<T,long>) ref->emplace_back(to_string(arg));
 		else { error("Append TypeError: "+string(typeid(T).name())); exit(1); }
 		return run(ref, args...);

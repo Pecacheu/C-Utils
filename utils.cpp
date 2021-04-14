@@ -8,8 +8,20 @@ void error(string e) { cerr << "\033[31mError: "+e+"\033[0m\n"; }
 void error(string f, int c) { cerr << "\033[31mError "+to_string(c)+" in "+f+": "+to_string(errno)+" "+strerror(errno)+"\033[0m\n"; }
 bool ckErr(int e, string f) { if(e<0) { error(f,e); return 1; } return 0; }
 
-const char *Buffer::toBase64() {
-	if(!len) return ""; size_t i=len; char *b = new char[(len*4/3)+2],*np=b,*p=(char*)buf;
+Buffer::Buffer():buf(0),len(0),nul(0),db(0) {}
+Buffer::Buffer(const size_t l):buf(l&&l!=NPOS?new char[l]:0),len(l),nul(0),db(buf) {}
+Buffer::Buffer(const char *b, const size_t l, bool d, bool n):buf(b),len(l),nul(n),db(d?b:0) {}
+Buffer::Buffer(const char *t):buf(t),len(t?strlen(t):0),nul(1),db(t) {}
+Buffer::Buffer(const string& s):buf(s.data()),len(s.size()),nul(1),db(0) {}
+
+const char *Buffer::toCStr(bool f) { return nul&&!f?buf:strCpy(buf,len); }
+Buffer Buffer::copy(size_t nl) { Buffer b(nl>len?nl:len); memcpy((void*)b.buf,buf,len); b.nul=nul; return b; }
+void Buffer::operator=(Buffer b) { buf=b.buf,len=b.len,nul=b.nul,db=b.db; b.db=0; }
+void Buffer::del() { delete[] db; buf=0,db=0,len=0; }
+
+const char *Buffer::toBase64(char *b) {
+	if(!len) return ""; size_t i=len; char *np=b,*p=(char*)buf;
+	if(!b) b=new char[(len*4/3)+2];
 	while(i >= 3) {
 		*((uint32_t*)np) = bChar64[*(p+2)&0x3f]<<24 | bChar64[((*(p+1)&0x0f)<<2) + ((*(p+2)&0xc0)>>6)]<<16
 		| bChar64[((*p&0x03)<<4) + ((*(p+1)&0xf0)>>4)]<<8 | bChar64[(*p&0xfc)>>2]; p+=3; i-=3; np+=4;
@@ -22,6 +34,10 @@ const char *Buffer::toBase64() {
 	*np=0; return b;
 }
 
+Buffer Buffer::sub(size_t o, size_t l) {
+	if(!buf) return *this;
+	Buffer b(buf+o,len+l); b.db=db; return b;
+}
 bool Buffer::match(const char *s) {
 	size_t i=0,l=strlen(s); if(!l || l != len) return 0;
 	for(; i<l; i++) if(buf[i] != s[i]) return 0; return 1;
@@ -32,15 +48,15 @@ bool Buffer::matchPart(const char *s, size_t ofs) {
 }
 
 size_t bFind(Buffer& b, const char *s, size_t ofs, size_t end) {
-	size_t i,o=ofs,sl=strlen(s),l=b.len-sl; if(!sl || sl+ofs > b.len) return string::npos;
+	size_t i,o=ofs,sl=strlen(s),l=b.len-sl; if(!sl || sl+ofs > b.len) return NPOS;
 	const char *t = b.buf+o; if(end && end < l) l = end;
 	for(; o<=l; o++,t++) { for(i=0; i<sl; i++) if(t[i] != s[i]) break; if(i == sl) return o; }
-	return string::npos;
+	return NPOS;
 }
 vector<Buffer> bSplit(Buffer& b, const char *sp) {
 	size_t i,o=0,sl=strlen(sp); vector<Buffer> bl; const char *t = b.buf;
 	while(1) {
-		if((i=bFind(b,sp,o)) == string::npos) { if(o < b.len) bl.push_back(Buffer(t+o,b.len-o)); break; }
+		if((i=bFind(b,sp,o)) == NPOS) { if(o < b.len) bl.push_back(Buffer(t+o,b.len-o)); break; }
 		if(o < i) bl.push_back(Buffer(t+o,i-o)); o = i+sl;
 	}
 	return bl;
@@ -48,31 +64,31 @@ vector<Buffer> bSplit(Buffer& b, const char *sp) {
 
 string intToHex(size_t i) { stringstream s; s << hex << i; return s.str(); }
 size_t strToUint(string s) {
-	size_t n=0,ss=s.size(); if(!ss) return string::npos;
+	size_t n=0,ss=s.size(); if(!ss) return NPOS;
 	char c,*p=&s[0],*l=p+ss;
-	while(p<l) { c = *p++ - '0'; if(c > 9 || c < 0) return string::npos; n=n*10+c; }
+	while(p<l) { c = *p++ - '0'; if(c > 9 || c < 0) return NPOS; n=n*10+c; }
 	return n;
 }
 size_t hexStrToUint(string s) {
-	size_t n=0,ss=s.size(); if(!ss) return string::npos;
+	size_t n=0,ss=s.size(); if(!ss) return NPOS;
 	char c,*p=&s[0],*l=p+ss;
 	while(p<l) {
-		c = *p++; if(c <= '9') { if(c < '0') return string::npos; c -= '0'; }
-		else if(c <= 'F') { if(c < 'A') return string::npos; c -= 'A'-10; }
-		else if(c <= 'f') { if(c < 'a') return string::npos; c -= 'a'-10; }
-		else return string::npos; n=n*16+c;
+		c = *p++; if(c <= '9') { if(c < '0') return NPOS; c -= '0'; }
+		else if(c <= 'F') { if(c < 'A') return NPOS; c -= 'A'-10; }
+		else if(c <= 'f') { if(c < 'a') return NPOS; c -= 'a'-10; }
+		else return NPOS; n=n*16+c;
 	}
 	return n;
 }
 
 void replaceAll(string& s, string from, string to) {
 	size_t fs=from.size(),ts=to.size(),st=0;
-	while((st = s.find(from,st)) != string::npos) { s.replace(st,fs,to); st+=ts; }
+	while((st = s.find(from,st)) != NPOS) { s.replace(st,fs,to); st+=ts; }
 }
 
 string toCamelCase(string s) {
 	char *d=s.data(); for(size_t i=0,l=s.size(); i<l; i++)
-		if(!i || d[i-1] == '-' || d[i-1] == ' ') d[i]=toupper(d[i]); else d[i]=toupper(d[i]);
+		if(!i || d[i-1]=='-' || d[i-1]==' ') d[i]=toupper(d[i]); else d[i]=tolower(d[i]);
 	return s;
 }
 
@@ -81,7 +97,7 @@ string decodeURIComponent(string s) {
 	string::iterator i=s.begin(); match_results<string::iterator> m;
 	while(regex_search(i, s.end(), m, uriEsc)) {
 		size_t n = hexStrToUint(m.str().substr(1));
-		if((n == 10 || n >= 32) && n != string::npos) {
+		if((n == 10 || n >= 32) && n != NPOS) {
 			i += m.position(); s.replace(i, i+3, string(1,n));
 		}
 		i = s.begin()+m.position()+1;
@@ -93,11 +109,11 @@ stringmap fromQuery(string s) {
 	if(startsWith(s,"?")) s=s.substr(1);
 	stringmap m; size_t o=0,n=s.find('&'),q;
 	string p,k,v; while(1) {
-		p=s.substr(o,n==string::npos?string::npos:n-o);
-		q=p.find('='); if(q == string::npos) return stringmap();
+		p=s.substr(o,n==NPOS?NPOS:n-o);
+		q=p.find('='); if(q == NPOS) return stringmap();
 		k=p.substr(0,q), v=p.substr(q+1);
 		if(!k.size() || !v.size()) return stringmap();
-		m[k]=decodeURIComponent(v); if(n == string::npos) return m;
+		m[k]=decodeURIComponent(v); if(n == NPOS) return m;
 		o=n+1, n=s.find('&',o);
 	}
 }
