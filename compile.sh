@@ -1,4 +1,5 @@
-set -e
+#!/bin/bash
+set -e; cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 GPP=g++-8
 FLAGS="-g -std=c++17 -Wno-psabi -Werror=return-type" #-g = Debug
 mkdir -p build; cd build

@@ -1,4 +1,4 @@
-//C++ Utils v2.2, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.2.1, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include "utils.h"
@@ -10,7 +10,7 @@ struct NetAddr {
 	NetAddr(uint16_t port=0);
 	NetAddr(const char *addr, uint16_t port=0); ~NetAddr();
 	static NetAddr *resolve(const char *host, uint16_t port=80);
-	const char *host; uint16_t port; void *a;
+	void in(); const char *host; uint16_t port; uint64_t ip=0; void *a=0;
 };
 
 struct Socket {

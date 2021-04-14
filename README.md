@@ -117,10 +117,13 @@ This dynamic class can append several data types, including Buffers, integers, s
 Represents network addresses and ports.
 - `NetAddr(uint16_t port=0)` Address defaults to INADDR_ANY.
 - `NetAddr(const char *addr, uint16_t port=0)` Currently only IPv4 supported.
-- `static NetAddr *resolve(const char *host, uint16_t port=80)` Resolve from a DNS host address. Returns NULL on error.
+- `static NetAddr *resolve(const char *host, uint16_t port=80)` Resolve from a DNS host address. Returns NULL on error. You should call `delete` on this when done.
+- `const char *host` Host address, either IP or hostname. NULL if not applicable.
+- `uint16_t port` Port.
+- `uint64_t ip` Raw IP address as number.
 
 ### [struct] Socket
-Represents a socket.
+Represents a TCP socket. Do not call constructor.
 - `ssize_t read(char *buf, size_t size)` Read bytes. Returns data read, or negative on error.
 - `ssize_t write(const char *buf, size_t len)` Write bytes. Returns data written, or negative on error.
 - `int setTimeout(time_t sec)` Set socket timeout. Returns negative on error.
@@ -131,7 +134,7 @@ Represents a socket.
 - `NetAddr addr` Address of socket.
 
 ### [struct] Dgram
-Represents a datagram.
+Represents a UDP datagram.
 - `Dgram(size_t buf=4096, bool nb=0)` Create datagram with receive buffer size `buf`. `nb` enables non-blocking mode. `err` is set on error.
 - `send(NetAddr to, const char *buf, size_t len)`\
 `send(NetAddr to, string& s)` Send a packet to address/port. Returns data written, or negative on error.
