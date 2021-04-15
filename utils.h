@@ -1,4 +1,4 @@
-//C++ Utils v2.2.1, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.2.2, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>
@@ -101,7 +101,9 @@ size_t hexStrToUint(string s);
 void replaceAll(string& s, string from, string to);
 
 bool startsWith(const string& s, const char *t);
+inline bool startsWith(const string& s, const string& t) { return startsWith(s,t.data()); }
 bool startsWith(const char *s, const char *t);
+inline bool endsWith(const string& s, const string& t) { return endsWith(s,t.data()); }
 bool endsWith(const string& s, const char *t);
 bool endsWith(const char *s, const char *t);
 

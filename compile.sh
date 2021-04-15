@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e; cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 GPP=g++-8
-FLAGS="-g -std=c++17 -Wno-psabi -Werror=return-type" #-g = Debug
+FLAGS="-pthread -std=c++17 -Wno-psabi -Werror=return-type"
 mkdir -p build; cd build
 echo "Compile Utils"
-if [[ $1 == "shared" ]]
-then
+[[ $1 = "debug" || $2 = "debug" ]] && FLAGS="$FLAGS -g"
+if [[ $1 = "shared" ]]; then
 	$GPP -c -fPIC $FLAGS ../utils.cpp ../net.cpp
 	echo "Link Shared"
 	$GPP utils.o -shared -o libutils.so
