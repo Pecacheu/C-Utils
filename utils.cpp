@@ -35,8 +35,8 @@ const char *Buffer::toBase64(char *b) {
 }
 
 Buffer Buffer::sub(size_t o, size_t l) {
-	if(!buf) return *this;
-	Buffer b(buf+o,len+l); b.db=db; return b;
+	if(!buf) return *this; if(o>len) return Buffer();
+	Buffer b(buf+o,min(l,len-o)); b.db=db; return b;
 }
 bool Buffer::match(const char *s) {
 	size_t i=0,l=strlen(s); if(!l || l != len) return 0;

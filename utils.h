@@ -1,4 +1,4 @@
-//C++ Utils v2.2.2, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.2.3, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>
@@ -80,7 +80,7 @@ struct Buffer {
 		s=min(s,len-1); return string(buf+s,l?min(l,len-s):len-s);
 	}
 	const char *toCStr(bool f=0); Buffer copy(size_t nl=0);
-	const char *toBase64(char *b=0); Buffer sub(size_t o, size_t l);
+	const char *toBase64(char *b=0); Buffer sub(size_t o, size_t l=NPOS);
 	bool match(const char *s); bool matchPart(const char *s, size_t ofs=0);
 	inline char& operator[](size_t i){ return (char&)buf[i]; }
 	void operator=(Buffer b); void del();

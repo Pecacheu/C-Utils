@@ -38,7 +38,7 @@ This is arguably the most useful part of the library. These buffers work similar
 - `const char *toCStr(bool f=0)` Return buffer as null-terminated string. If *nul* flag is false, or `f` is true, the data is copied with `strCpy`.
 - `Buffer copy(size_t nl=0)` Create & allocate a copy of the buffer, optionally with length `nl`, if longer than *len.* Delete with `del()`.
 - `const char *toBase64(char *b=0)` Convert buffer to base64 using the `bChar64` table. Padding is stripped. Because padding is stupid. `b` is optional buffer to use, otherwise allocates with `new`.
-- `Buffer sub(size_t ofs, size_t len)` Returns a sub-buffer starting at `ofs` with length `len`. If the buffer is empty, returns the existing buffer.
+- `Buffer sub(size_t ofs, size_t len=NPOS)` Returns a sub-buffer starting at `ofs` with length `len`. Performs bounds-checking. If the buffer is empty, returns the existing buffer.
 - `bool match(const char *s)` Check if entire buffer matches a string.
 - `bool matchPart(const char *s, size_t ofs=0)` Check for string match in buffer at offset.
 - `char& operator[](size_t i)` Read/write index in buffer.
