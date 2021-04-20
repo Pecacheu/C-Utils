@@ -96,11 +96,11 @@ const regex uriEsc("%[0-9A-F]{2}");
 string decodeURIComponent(string s) {
 	string::iterator i=s.begin(); match_results<string::iterator> m;
 	while(regex_search(i, s.end(), m, uriEsc)) {
-		size_t n = hexStrToUint(m.str().substr(1));
+		size_t n=hexStrToUint(m.str().substr(1));
 		if((n == 10 || n >= 32) && n != NPOS) {
-			i += m.position(); s.replace(i, i+3, string(1,n));
+			i+=m.position(); s.replace(i, i+3, string(1,n));
 		}
-		i = s.begin()+m.position()+1;
+		i=s.begin()+m.position()+1;
 	}
 	return s;
 }

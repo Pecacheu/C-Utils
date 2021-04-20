@@ -10,7 +10,7 @@ struct NetAddr {
 	NetAddr(uint16_t port=0);
 	NetAddr(const char *addr, uint16_t port=0); ~NetAddr();
 	static NetAddr *resolve(const char *host, uint16_t port=80);
-	void in(); const char *host; uint16_t port; uint64_t ip=0; void *a=0;
+	void in(); const char *host; uint16_t port; uint64_t ip; void *a=0;
 };
 
 struct Socket {
