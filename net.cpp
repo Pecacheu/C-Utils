@@ -13,10 +13,10 @@ socklen_t AddrLen=0;
 inline void setNb(int s) { fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK); }
 
 NetAddr::~NetAddr() { delete (sockaddr_in*)a; a=0; }
-NetAddr::NetAddr(uint16_t port):host(0),port(port),ip(0) {}
-NetAddr::NetAddr(const char *addr, uint16_t port):host(addr),port(port),ip(inet_addr(host)) {}
+NetAddr::NetAddr(uint16_t port):port(port),ip(0) {}
+NetAddr::NetAddr(const char *addr, uint16_t port):host(addr),port(port),ip(inet_addr(addr)) {}
 void NetAddr::in() {
-	if(a) return; sockaddr_in *s = new sockaddr_in(); a=s; if(!AddrLen) AddrLen=sizeof(*s);
+	if(a) return; sockaddr_in *s=new sockaddr_in(); a=s; if(!AddrLen) AddrLen=sizeof(*s);
 	s->sin_family=AF_INET; s->sin_addr.s_addr=ip?ip:INADDR_ANY;
 	s->sin_port=htons(port);
 }
@@ -33,21 +33,21 @@ int netStartServer(NetAddr a, int backlog) {
 	if(setsockopt(srv, SOL_SOCKET, SO_REUSEADDR, &r, sizeof(int))) return -2;
 	if(bind(srv, (sockaddr *)a.a, AddrLen)) return -3;
 	if(listen(srv, backlog)) return -4;
-	a.~NetAddr(); return srv;
+	return srv;
 }
 
 Socket netAccept(int srv, bool nb) {
 	sockaddr_in a=sockaddr_in(); socklen_t len=AddrLen;
 	int sck=accept(srv, (sockaddr *)&a, &len); if(sck < 0) return Socket(-1);
-	if(nb) setNb(sck); len=INET6_ADDRSTRLEN+1; char *as=new char[len];
-	if(!inet_ntop(a.sin_family,&a.sin_addr.s_addr,as,len)) { close(sck); return Socket(-2); }
-	return Socket(srv,sck,NetAddr(as,ntohs(a.sin_port)));
+	if(nb) setNb(sck); len=INET6_ADDRSTRLEN+1; char as[len];
+	if(!inet_ntop(a.sin_family,&a.sin_addr.s_addr,(char*)&as,len)) { close(sck); return Socket(-2); }
+	return Socket(srv,sck,NetAddr((char*)&as,ntohs(a.sin_port)));
 }
 
 Socket netConnect(NetAddr a, bool nb) {
 	a.in(); int sck=socket(AF_INET, SOCK_STREAM, 0); if(sck < 0) return Socket(-1);
 	if(connect(sck, (sockaddr *)a.a, AddrLen)) { close(sck); return Socket(-2); }
-	if(nb) setNb(sck); a.~NetAddr(); return Socket(0,sck,a);
+	if(nb) setNb(sck); return Socket(0,sck,a);
 }
 
 int Socket::setTimeout(time_t sec) {
@@ -57,7 +57,7 @@ int Socket::setTimeout(time_t sec) {
 
 ssize_t Socket::read(char *buf, size_t len) { return recv(sck,buf,len,0); }
 ssize_t Socket::write(const char *buf, size_t len) { return send(sck,buf,len,0); }
-void Socket::close() { ::close(sck); if(srv) delete addr.host; }
+void Socket::close() { ::close(sck); }
 void netClose(int s) { close(s); }
 
 //UDP Protocol:
@@ -69,7 +69,7 @@ Dgram::Dgram(size_t buf, bool nb):bs(buf) {
 
 ssize_t Dgram::send(NetAddr to, const char *buf, size_t len) {
 	to.in(); ssize_t s=sendto(sck, buf, len, MSG_CONFIRM, (sockaddr *)to.a, AddrLen);
-	to.~NetAddr(); return s;
+	return s;
 }
 ssize_t Dgram::recv(char *buf, size_t size, char **addr, uint16_t *port) {
 	sockaddr_in ab; socklen_t len=AddrLen;
@@ -92,7 +92,7 @@ int Dgram::onData(NetAddr a, DgramFunc cb) {
 	return 0;
 }
 
-bool Dgram::bind(NetAddr a) { a.in(); bool s=::bind(sck, (sockaddr *)a.a, AddrLen) == 0; a.~NetAddr(); return s; }
+bool Dgram::bind(NetAddr a) { a.in(); bool s=::bind(sck, (sockaddr *)a.a, AddrLen) == 0; return s; }
 void Dgram::close() { dRun=0; ::close(sck); }
 
 }
