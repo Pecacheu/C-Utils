@@ -83,7 +83,7 @@ This is arguably the most useful part of the library. These buffers work similar
 ### JavaScript Event Loop
 An extremely useful event loop and scheduling system that runs in a single thread.
 
-*Note:* While the event loop is thread-safe, it uses mutexes internally, so please avoid mutex race conditions (ex. your timer function locks the same mutex as the function that is attempting to set/clear it).
+*Note:* While the event loop itself is thread-safe, it uses mutexes for locking internally, so please avoid race conditions external to your timers (ex. your timer callback locks the same mutex as a function that is attempting to set/clear it). You can avoid such conditions using the `wait()` function.
 
 ### [class] EventLoop
 - `EventLoop(size_t max=UTILS_MAX_TIMERS)` Create EventLoop. `max` sets max scheduled timers.
@@ -91,6 +91,7 @@ An extremely useful event loop and scheduling system that runs in a single threa
 - `size_t setInterval(EVLFunc f, uint64_t ms, void *p=0)` Set interval `f` with optional data pinter `p`. Returns ID, or 0 if queue full.
 - `bool clearTimeout(size_t id)` Clear timeout/interval with ID. Returns true if successful.
 - `void run(bool ex=0)` Run EventLoop in current thread. Set `ex` to auto-exit when the queue ends.
+- `void wait(mutex& m)` Locks and waits on mutex `m` to ensure that no timers interfere until `m` is unlocked.
 - `void stop()` Stop the EventLoop, causing `run` to exit. Fully thread-safe.
 
 `EventLoop GlobalEventLoop` Default, global event loop. Run with `GlobalEventLoop.run()`.

@@ -83,7 +83,7 @@ size_t hexStrToUint(string s) {
 
 void replaceAll(string& s, string from, string to) {
 	size_t fs=from.size(),ts=to.size(),st=0;
-	while((st = s.find(from,st)) != NPOS) { s.replace(st,fs,to); st+=ts; }
+	while((st=s.find(from,st)) != NPOS) { s.replace(st,fs,to); st+=ts; }
 }
 
 string toCamelCase(string s) {
@@ -172,9 +172,11 @@ string getDate(uint64_t t, bool sec) {
 
 EventLoop GlobalEventLoop;
 void EventLoop::run(bool ex) {
-	if(rl) return; rl=1; uint64_t t;
+	if(rl) return; rl=1,wl=0; uint64_t t;
 	while(rl) {
-		this_thread::sleep_for(chrono::milliseconds(1)); lck.lock(); t=msTime();
+		lck.lock();
+		while(wl) { mutex& m=(mutex&)*wl; lck.unlock(); m.lock(); wl=0; m.unlock(); lck.lock(); } //Queue for unlocks.
+		t=msTime();
 		unordered_map<size_t,EVData>::iterator i=ev.begin(),v,l=ev.end();
 		if(ex && i==l) rl=0; while(i!=l) {
 			v=i++; EVData& e = (*v).second; if(t >= e.t) {
@@ -182,7 +184,12 @@ void EventLoop::run(bool ex) {
 			}
 		}
 		lck.unlock();
+		this_thread::sleep_for(chrono::milliseconds(1));
 	}
+}
+void EventLoop::wait(mutex& m) {
+	lck.lock(); if(wl != &m) while(rl && wl) { lck.unlock(); this_thread::yield(); lck.lock(); } //Queue for locks.
+	m.lock(); wl=&m; lck.unlock();
 }
 void EventLoop::stop() { rl=0; }
 

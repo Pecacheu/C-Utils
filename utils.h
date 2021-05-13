@@ -1,4 +1,4 @@
-//C++ Utils v2.2.5, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.3, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>
@@ -127,8 +127,9 @@ class EventLoop {
 	size_t setTimeout(EVLFunc f, uint64_t ms, void *p=0);
 	size_t setInterval(EVLFunc f, uint64_t ms, void *p=0);
 	bool clearTimeout(size_t id); void run(bool ex=0);
-	void stop(); private: volatile bool rl=0;
-	mutex lck; unordered_map<size_t,EVData> ev;
+	void wait(mutex &m); void stop();
+	private: volatile bool rl=0; volatile mutex *wl=0;
+	recursive_mutex lck; unordered_map<size_t,EVData> ev;
 	const size_t max;
 };
 
