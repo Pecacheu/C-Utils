@@ -188,8 +188,10 @@ void EventLoop::run(bool ex) {
 	}
 }
 void EventLoop::wait(mutex& m) {
-	lck.lock(); if(wl != &m) while(rl && wl) { lck.unlock(); this_thread::yield(); lck.lock(); } //Queue for locks.
-	m.lock(); wl=&m; lck.unlock();
+	lck.lock(); while((rl && wl) || !m.try_lock()) { //Queue for locks.
+		lck.unlock(); this_thread::yield(); lck.lock();
+	}
+	wl=&m; lck.unlock();
 }
 void EventLoop::stop() { rl=0; }
 
