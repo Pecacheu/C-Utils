@@ -1,4 +1,4 @@
-//C++ Utils v2.3.1, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.3.2, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>

@@ -8,17 +8,18 @@ using namespace utils;
 
 struct NetAddr {
 	NetAddr(uint16_t port=0);
-	NetAddr(const char *addr, uint16_t port=0); ~NetAddr();
+	NetAddr(const char *addr, uint16_t port=0);
+	NetAddr(const NetAddr &t); ~NetAddr();
 	static NetAddr *resolve(const char *host, uint16_t port=80);
-	void in(); string host; uint16_t port; uint64_t ip; void *a=0;
+	string host; uint64_t ip; const uint16_t port;
+	void *a=0; void in();
 };
 
 struct Socket {
-	Socket(int e):err(e) {}
-	Socket(int s, int c, NetAddr a):err(0),srv(s),sck(c),addr(a) {}
+	Socket(int e); Socket(int s, int c, NetAddr a);
 	ssize_t read(char *buf, size_t size); ssize_t write(const char *buf, size_t len);
 	int setTimeout(time_t sec); void close();
-	int err,srv,sck; NetAddr addr;
+	int err; const int srv,sck; const NetAddr addr;
 };
 
 struct Dgram;

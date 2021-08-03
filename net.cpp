@@ -15,6 +15,7 @@ inline void setNb(int s) { fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
 NetAddr::~NetAddr() { delete (sockaddr_in*)a; a=0; }
 NetAddr::NetAddr(uint16_t port):port(port),ip(0) {}
 NetAddr::NetAddr(const char *addr, uint16_t port):host(addr),port(port),ip(inet_addr(addr)) {}
+NetAddr::NetAddr(const NetAddr &a):host(a.host),port(a.port),ip(a.ip) {}
 void NetAddr::in() {
 	if(a) return; sockaddr_in *s=new sockaddr_in(); a=s; if(!AddrLen) AddrLen=sizeof(*s);
 	s->sin_family=AF_INET; s->sin_addr.s_addr=ip?ip:INADDR_ANY;
@@ -49,6 +50,9 @@ Socket netConnect(NetAddr a, bool nb) {
 	if(connect(sck, (sockaddr *)a.a, AddrLen)) { close(sck); return Socket(-2); }
 	if(nb) setNb(sck); return Socket(0,sck,a);
 }
+
+Socket::Socket(int e):err(e),srv(0),sck(0) {}
+Socket::Socket(int s, int c, NetAddr a):err(0),srv(s),sck(c),addr(a) {}
 
 int Socket::setTimeout(time_t sec) {
 	timeval t=timeval(); t.tv_sec=sec;

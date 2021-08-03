@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e; cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
-GPP=g++-8
+GPP=g++
 FLAGS="-pthread -std=c++17 -Wno-psabi -Werror=return-type"
 mkdir -p build; cd build
 echo "Compile Utils"
