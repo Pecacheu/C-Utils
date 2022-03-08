@@ -153,6 +153,23 @@ bool endsWith(const char *s, const char *t) {
 	for(; i<l; i++,si++) if(t[i] != s[si]) return 0; return 1;
 }
 
+Buffer runCmd(string cmd, string e) {
+	const char *a[4] {"/bin/sh","-c",cmd.data(),0};
+	int p[2]; pid_t pid; if(pipe(p)) { error(e,-1); return Buffer(NPOS); }
+	if((pid=fork()) < 0) { error(e,-2); return Buffer(NPOS); }
+	else if(!pid) { //Runs in fork:
+		dup2(p[1],STDOUT_FILENO); dup2(p[1],STDERR_FILENO);
+		close(p[1]); close(p[0]); execv(a[0],(char*const*)a); exit(-1);
+	}
+	close(p[1]);
+	char *o,*b; size_t l=0,r=1; while(r) {
+		o=b,b=new char[l+UTILS_CMD_READ]; if(l) { memcpy(b,o,l); delete[] o; }
+		r=read(p[0],b+l,UTILS_CMD_READ); l+=r;
+	}
+	close(p[0]); waitpid(pid,0,0);
+	return Buffer(b,l);
+}
+
 uint64_t usTime() {
 	return chrono::duration_cast<chrono::microseconds>(chrono::steady_clock::now().time_since_epoch()).count();
 }

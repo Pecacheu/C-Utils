@@ -29,7 +29,7 @@
 ### [struct] Buffer
 This is arguably the most useful part of the library. These buffers work similar to Node.js buffers, which vastly improves code portability and readability.
 - `Buffer()` Create empty buffer.
-- `Buffer(const size_t l)` Create buffer of size `l`. If `l` is 0 or `NPOS`, no data will be allocated. Allocated buffer, delete with `del()`.
+- `Buffer(const size_t l)` Create buffer of size `l`. If `l` is 0 or **NPOS**, no data will be allocated. Allocated buffer, delete with `del()`.
 - `Buffer(const char *b, const size_t l, bool d=1, bool n=0)` Create buffer from existing data. The original pointer is used. If `d` is false, buffer will not be deallocated. `n` sets *nul* flag.
 - `Buffer(const char *t)` Create buffer from a null-terminated string. The original pointer is used.
 - `Buffer(const string& s)` Create buffer from a string. The original pointer is used.
@@ -61,8 +61,8 @@ This is arguably the most useful part of the library. These buffers work similar
 
 ### String Help
 - `string intToHex(size_t i)` Convert uint to hex.
-- `size_t strToUint(string s)` Convert string to uint. Returns `NPOS` if invalid.
-- `size_t hexStrToUint(string s)` Convert hex string to uint. Returns `NPOS` if invalid.
+- `size_t strToUint(string s)` Convert string to uint. Returns **NPOS** if invalid.
+- `size_t hexStrToUint(string s)` Convert hex string to uint. Returns **NPOS** if invalid.
 - `void replaceAll(string& s, string from, string to)` Replace all instances of `from` with `to` in `s`.
 - `bool startsWith(const string& s, const char *t)`\
 `bool startsWith(const char *s, const char *t)` True if string `s` starts with `t`.
@@ -74,6 +74,9 @@ This is arguably the most useful part of the library. These buffers work similar
 - `string decodeURIComponent(string s)` Decode URI component.
 - `stringmap fromQuery(string s)` Extract and decode query data (optionally including leading `?`) from URI.
 - `string toQuery(stringmap m)` Convert stringmap to query string, not including leading `?`. Does not encode URI components.
+
+### Other
+- `Buffer runCmd(string cmd, string e="", int *st=0)` Run shell command and return output as Buffer. On error, Buffer has length **NPOS**. `e` is optional name to print on error.
 
 ### Time Help
 - `uint64_t usTime()` Microsecond time from the high-res clock.
@@ -90,7 +93,7 @@ An extremely useful event loop and scheduling system that runs in a single threa
 - `size_t setTimeout(EVLFunc f, uint64_t ms, void *p=0)` Set timeout `f` with optional data pointer `p`. Returns ID, or 0 if queue full.
 - `size_t setInterval(EVLFunc f, uint64_t ms, void *p=0)` Set interval `f` with optional data pinter `p`. Returns ID, or 0 if queue full.
 - `bool clearTimeout(size_t id)` Clear timeout/interval with ID. Returns true if successful.
-- `void run(bool ex=0)` Run EventLoop in current thread. Set `ex` to auto-exit when the queue ends.
+- `void run(bool ex=0)` Run EventLoop in current thread. Set `ex` true to auto-exit when the queue ends.
 - `void wait(mutex& m)` Locks and waits on mutex `m` to ensure that no timers interfere until `m` is unlocked.
 - `void stop()` Stop the EventLoop, causing `run` to exit. Fully thread-safe.
 

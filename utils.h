@@ -1,4 +1,4 @@
-//C++ Utils v2.3.2, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.3.3, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>
@@ -16,6 +16,7 @@
 using namespace std;
 
 #define UTILS_MAX_TIMERS 65536
+#define UTILS_CMD_READ 4096
 #define NPOS string::npos
 
 //64-bit:
@@ -112,10 +113,11 @@ string decodeURIComponent(string s);
 stringmap fromQuery(string s);
 string toQuery(stringmap m);
 
+Buffer runCmd(string cmd, string e="");
+
 //JavaScript Time & Event Loop
 uint64_t usTime(); uint64_t msTime();
 string getDate(uint64_t t=0, bool sec=0);
-
 
 struct EVData {
 	EVData(EVLFunc f, uint64_t t, void *p, uint64_t i):f(f),t(t),p(p),i(i) {}
