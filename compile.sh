@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e; cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")"
 GPP=g++
-FLAGS="-pthread -std=c++17 -Wno-psabi -Werror=return-type"
+FLAGS="-pthread -std=c++17 -Wno-psabi -Werror=return-type $3"
 mkdir -p build; cd build
 echo "Compile Utils"
 [[ $1 = "debug" || $2 = "debug" ]] && FLAGS="$FLAGS -g"

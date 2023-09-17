@@ -1,4 +1,4 @@
-//C++ Utils v2.3.3, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils v2.3.4, ©2021 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>
@@ -12,11 +12,16 @@
 #include <vector>
 #include <regex>
 #include <functional>
+#include <unistd.h>
 
 using namespace std;
 
-#define UTILS_MAX_TIMERS 65536
-#define UTILS_CMD_READ 4096
+#ifndef UTILS_MAX_TIMERS
+	#define UTILS_MAX_TIMERS 65536
+#endif
+#ifndef UTILS_CMD_READ
+	#define UTILS_CMD_READ 4096
+#endif
 #define NPOS string::npos
 
 //64-bit:
@@ -81,7 +86,8 @@ struct Buffer {
 		s=min(s,len-1); return string(buf+s,l?min(l,len-s):len-s);
 	}
 	const char *toCStr(bool f=0); Buffer copy(size_t nl=0);
-	const char *toBase64(char *b=0); Buffer sub(size_t o, size_t l=NPOS);
+	string toBase64(); size_t toBase64(char *b);
+	Buffer sub(size_t o, size_t l=NPOS);
 	bool match(const char *s); bool matchPart(const char *s, size_t ofs=0);
 	inline char& operator[](size_t i){ return (char&)buf[i]; }
 	void operator=(Buffer b); void del();
@@ -94,7 +100,7 @@ bool ckErr(int e, string f);
 
 //String/Buffer Help
 size_t bFind(Buffer& b, const char *s, size_t ofs=0, size_t end=0);
-vector<Buffer> bSplit(Buffer& b, const char *sp);
+vector<Buffer> bSplit(Buffer& b, const char *sp, bool es=0);
 
 string intToHex(size_t i);
 size_t strToUint(string s);
@@ -114,6 +120,9 @@ stringmap fromQuery(string s);
 string toQuery(stringmap m);
 
 Buffer runCmd(string cmd, string e="");
+
+//64-bit UUID
+string genUUID();
 
 //JavaScript Time & Event Loop
 uint64_t usTime(); uint64_t msTime();

@@ -37,7 +37,8 @@ This is arguably the most useful part of the library. These buffers work similar
 - `string toStr(size_t s, size_t l=0)` Convert buffer to string, starting at `s` with length `l`. The data is copied.
 - `const char *toCStr(bool f=0)` Return buffer as null-terminated string. If *nul* flag is false, or `f` is true, the data is copied with `strCpy`.
 - `Buffer copy(size_t nl=0)` Create & allocate a copy of the buffer, optionally with length `nl`, if longer than *len.* Delete with `del()`.
-- `const char *toBase64(char *b=0)` Convert buffer to base64 using the `bChar64` table. Padding is stripped. Because padding is stupid. `b` is optional buffer to use, otherwise allocates with `new`.
+- `string toBase64()` Convert buffer to base64 using the `bChar64` table. Padding is stripped. Because padding is stupid.
+- `size_t toBase64(char *b)` Convert buffer to base64 using the `bChar64` table. Padding is stripped. Because padding is stupid. `b` is the char buffer to use, returns length written.
 - `Buffer sub(size_t ofs, size_t len=NPOS)` Returns a sub-buffer starting at `ofs` with length `len`. Performs bounds-checking. If the buffer is empty, returns the existing buffer.
 - `bool match(const char *s)` Check if entire buffer matches a string.
 - `bool matchPart(const char *s, size_t ofs=0)` Check for string match in buffer at offset.
@@ -51,7 +52,7 @@ This is arguably the most useful part of the library. These buffers work similar
 
 ### Buffer Help
 - `size_t bFind(Buffer& b, const char *s, size_t ofs=0, size_t end=0)` Find first match of `s` in buffer `b`, starting at `ofs`, and optionally ending at `end`. Can also be used as `indexOf`.
-- `vector<Buffer> bSplit(Buffer& b, const char *sp)` Uses `bFind` to split a buffer by separator `sp`. For maximum performance, all Buffers reference the original data.
+- `vector<Buffer> bSplit(Buffer& b, const char *sp, bool es=0)` Uses `bFind` to split a buffer by separator `sp`. If `es` is true, empty strings are included. For maximum performance, all Buffers reference the original data.
 
 ### C String Help
 *Note:* These functions allocate with `new`. Delete with `delete[]`.

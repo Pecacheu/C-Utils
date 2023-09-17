@@ -1,6 +1,10 @@
 //C++ Utils, ©2021 Pecacheu; GNU GPL 3.0
 
 #include "utils.h"
+#include <sys/wait.h>
+#include <fstream>
+#include <openssl/rand.h>
+#include <openssl/err.h>
 
 namespace utils {
 
@@ -19,9 +23,8 @@ Buffer Buffer::copy(size_t nl) { Buffer b(nl>len?nl:len); memcpy((void*)b.buf,bu
 void Buffer::operator=(Buffer b) { buf=b.buf,len=b.len,nul=b.nul,db=b.db; b.db=0; }
 void Buffer::del() { delete[] db; buf=0,db=0,len=0; }
 
-const char *Buffer::toBase64(char *b) {
-	if(!len) return ""; size_t i=len; char *np=b,*p=(char*)buf;
-	if(!b) b=new char[(len*4/3)+2];
+size_t Buffer::toBase64(char *b) {
+	if(!len) return 0; size_t i=len; char *np=b,*p=(char*)buf;
 	while(i >= 3) {
 		*((uint32_t*)np) = bChar64[*(p+2)&0x3f]<<24 | bChar64[((*(p+1)&0x0f)<<2) + ((*(p+2)&0xc0)>>6)]<<16
 		| bChar64[((*p&0x03)<<4) + ((*(p+1)&0xf0)>>4)]<<8 | bChar64[(*p&0xfc)>>2]; p+=3; i-=3; np+=4;
@@ -31,7 +34,11 @@ const char *Buffer::toBase64(char *b) {
 		*np++ = bChar64[((*p&0x03)<<4) + (((i>1?*(p+1):0)&0xf0)>>4)];
 		if(i>1) *np++ = bChar64[((*(p+1)&0x0f)<<2)];
 	}
-	*np=0; return b;
+	*np=0; return np-b;
+}
+string Buffer::toBase64() {
+	if(!len) return ""; char b[(len*4/3)+2];
+	return string(b, toBase64(b));
 }
 
 Buffer Buffer::sub(size_t o, size_t l) {
@@ -53,11 +60,11 @@ size_t bFind(Buffer& b, const char *s, size_t ofs, size_t end) {
 	for(; o<=l; o++,t++) { for(i=0; i<sl; i++) if(t[i] != s[i]) break; if(i == sl) return o; }
 	return NPOS;
 }
-vector<Buffer> bSplit(Buffer& b, const char *sp) {
+vector<Buffer> bSplit(Buffer& b, const char *sp, bool es) {
 	size_t i,o=0,sl=strlen(sp); vector<Buffer> bl; const char *t = b.buf;
 	while(1) {
-		if((i=bFind(b,sp,o)) == NPOS) { if(o < b.len) bl.push_back(Buffer(t+o,b.len-o)); break; }
-		if(o < i) bl.push_back(Buffer(t+o,i-o)); o = i+sl;
+		if((i=bFind(b,sp,o)) == NPOS) { if(es || o<b.len) bl.push_back(Buffer(t+o,b.len-o)); break; }
+		if(es?o<=i:(o<i)) bl.push_back(Buffer(t+o,i-o)); o=i+sl;
 	}
 	return bl;
 }
@@ -168,6 +175,19 @@ Buffer runCmd(string cmd, string e) {
 	}
 	close(p[0]); waitpid(pid,0,0);
 	return Buffer(b,l);
+}
+
+//<U8 CryptoRand XOR CPUUptime><U16 CryptoRand><U8 Counter><U32 UTC Sec>
+uint8_t IDCount=0;
+string genUUID() {
+	uint8_t d[8], c[3];
+	if(!RAND_bytes(c,3)) throw "SSL Error "+to_string(ERR_get_error());
+	double upSec; ifstream("/proc/uptime", std::ios::in) >> upSec;
+	d[0] = c[0] ^ (uint8_t)(upSec*1000);
+	*(uint16_t*)(d+1) = *(uint16_t*)(c+1);
+	d[3] = IDCount++;
+	*(uint32_t*)(d+4) = msTime()/10000;
+	return Buffer((char*)d,8).toBase64();
 }
 
 uint64_t usTime() {
