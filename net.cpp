@@ -1,4 +1,4 @@
-//C++ Utils, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils, ©2025 Pecacheu; GNU GPL 3.0
 
 #include "net.h"
 #include <sys/socket.h>

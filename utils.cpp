@@ -1,4 +1,4 @@
-//C++ Utils, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils, ©2025 Pecacheu; GNU GPL 3.0
 
 #include "utils.h"
 #include <sys/wait.h>
@@ -18,7 +18,12 @@ Buffer::Buffer(const char *b, const size_t l, bool d, bool n):buf(b),len(l),nul(
 Buffer::Buffer(const char *t):buf(t),len(t?strlen(t):0),nul(1),db(t) {}
 Buffer::Buffer(const string& s):buf(s.data()),len(s.size()),nul(1),db(0) {}
 
-const char *Buffer::toCStr(bool f) { return nul&&!f?buf:strCpy(buf,len); }
+string Buffer::toStr() { return buf?string(buf,len):""; }
+string Buffer::toStr(size_t s, size_t l) {
+	if(!buf) return ""; s=min(s,len-1);
+	return string(buf+s,l?min(l,len-s):len-s);
+}
+const char *Buffer::toCStr(bool f) { return buf?nul&&!f?buf:strCpy(buf,len):""; }
 Buffer Buffer::copy(size_t nl) { Buffer b(nl>len?nl:len); memcpy((void*)b.buf,buf,len); b.nul=nul; return b; }
 void Buffer::operator=(Buffer b) { buf=b.buf,len=b.len,nul=b.nul,db=b.db; b.db=0; }
 void Buffer::del() { delete[] db; buf=0,db=0,len=0; }
@@ -41,9 +46,9 @@ string Buffer::toBase64() {
 	return string(b, toBase64(b));
 }
 
-Buffer Buffer::sub(size_t o, size_t l) {
+Buffer Buffer::sub(size_t o, size_t l, bool d) {
 	if(!buf) return *this; if(o>len) return Buffer();
-	Buffer b(buf+o,min(l,len-o)); b.db=db; return b;
+	Buffer b(buf+o,min(l,len-o)); b.db=d?db:0; return b;
 }
 bool Buffer::match(const char *s) {
 	size_t i=0,l=strlen(s); if(!l || l != len) return 0;

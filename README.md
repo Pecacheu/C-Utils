@@ -12,14 +12,15 @@
 ## Namespace: utils
 
 ### Macros
-- `ARCH64` True if 64-bit.
-- `WINDOWS` True if Windows.
-- `ARM` Version of ARM Arch, 0 if not ARM.
-- `static_block` Java-style `static` block.
+- `ARCH64` True if 64-bit
+- `WINDOWS` True if Windows
+- `ARM` Version of ARM Arch, 0 if not ARM
+- `static_block` Java-style `static` block
+- `NPOS` Equal to `string::npos`
 
 ### Typedefs
-- stringmap `unordered_map<string,string>` JS-style array of strings.
-- EVLFunc `void func(void *p)` Used for EventLoop.
+- stringmap `unordered_map<string,string>` JS-style array of strings
+- EVLFunc `void func(void *p)` Used for EventLoop
 
 ### Error Help
 - `void error(string e)` Print `e` in red.
@@ -30,16 +31,16 @@
 This is arguably the most useful part of the library. These buffers work similar to Node.js buffers, which vastly improves code portability and readability.
 - `Buffer()` Create empty buffer.
 - `Buffer(const size_t l)` Create buffer of size `l`. If `l` is 0 or **NPOS**, no data will be allocated. Allocated buffer, delete with `del()`.
-- `Buffer(const char *b, const size_t l, bool d=1, bool n=0)` Create buffer from existing data. The original pointer is used. If `d` is false, buffer will not be deallocated. `n` sets *nul* flag.
+- `Buffer(const char *b, const size_t l, bool del=true, bool n=false)` Create buffer from existing data. The original pointer is used. If `del` is false, the buffer is considered *const* and shall not be deallocated, even if `del()` is called. `n` sets *nul* flag.
 - `Buffer(const char *t)` Create buffer from a null-terminated string. The original pointer is used.
 - `Buffer(const string& s)` Create buffer from a string. The original pointer is used.
 - `string toStr()` Convert buffer to string. The data is copied.
 - `string toStr(size_t s, size_t l=0)` Convert buffer to string, starting at `s` with length `l`. The data is copied.
-- `const char *toCStr(bool f=0)` Return buffer as null-terminated string. If *nul* flag is false, or `f` is true, the data is copied with `strCpy`.
+- `const char *toCStr(bool f=false)` Return buffer as null-terminated string. If *nul* flag is false, or `f` is true, the data is copied with `strCpy`.
 - `Buffer copy(size_t nl=0)` Create & allocate a copy of the buffer, optionally with length `nl`, if longer than *len.* Delete with `del()`.
 - `string toBase64()` Convert buffer to base64 using the `bChar64` table. Padding is stripped. Because padding is stupid.
 - `size_t toBase64(char *b)` Convert buffer to base64 using the `bChar64` table. Padding is stripped. Because padding is stupid. `b` is the char buffer to use, returns length written.
-- `Buffer sub(size_t ofs, size_t len=NPOS)` Returns a sub-buffer starting at `ofs` with length `len`. Performs bounds-checking. If the buffer is empty, returns the existing buffer.
+- `Buffer sub(size_t ofs, size_t len=NPOS, bool del=true)` Returns a sub-buffer starting at `ofs` with length `len`. Performs bounds-checking. If the buffer is empty, returns the existing buffer. If `del` is true, the deletion flag is left true if it was true in the original buffer *(Warning: Because sub() does not perform a copy, this means that deleting the sub-buffer also deletes the original!)*
 - `bool match(const char *s)` Check if entire buffer matches a string.
 - `bool matchPart(const char *s, size_t ofs=0)` Check for string match in buffer at offset.
 - `char& operator[](size_t i)` Read/write index in buffer.
@@ -52,7 +53,7 @@ This is arguably the most useful part of the library. These buffers work similar
 
 ### Buffer Help
 - `size_t bFind(Buffer& b, const char *s, size_t ofs=0, size_t end=0)` Find first match of `s` in buffer `b`, starting at `ofs`, and optionally ending at `end`. Can also be used as `indexOf`.
-- `vector<Buffer> bSplit(Buffer& b, const char *sp, bool es=0)` Uses `bFind` to split a buffer by separator `sp`. If `es` is true, empty strings are included. For maximum performance, all Buffers reference the original data.
+- `vector<Buffer> bSplit(Buffer& b, const char *sp, bool es=false)` Uses `bFind` to split a buffer by separator `sp`. If `es` is true, empty strings are included. For maximum performance, all Buffers reference the original data.
 
 ### C String Help
 *Note:* These functions allocate with `new`. Delete with `delete[]`.
@@ -82,7 +83,7 @@ This is arguably the most useful part of the library. These buffers work similar
 ### Time Help
 - `uint64_t usTime()` Microsecond time from the high-res clock.
 - `uint64_t msTime()` Millisecond time from the high-res clock.
-- `string getDate(uint64_t t=0, bool sec=0)` Get user-readable date. Do not use with high-res clock. If `t` is 0, uses `time()` to get current RTC time. `sec` enables seconds.
+- `string getDate(uint64_t t=0, bool sec=false)` Get user-readable date. Do not use with high-res clock. If `t` is 0, uses `time()` to get current RTC time. `sec` enables seconds.
 
 ### JavaScript Event Loop
 An extremely useful event loop and scheduling system that runs in a single thread.
@@ -94,7 +95,7 @@ An extremely useful event loop and scheduling system that runs in a single threa
 - `size_t setTimeout(EVLFunc f, uint64_t ms, void *p=0)` Set timeout `f` with optional data pointer `p`. Returns ID, or 0 if queue full.
 - `size_t setInterval(EVLFunc f, uint64_t ms, void *p=0)` Set interval `f` with optional data pinter `p`. Returns ID, or 0 if queue full.
 - `bool clearTimeout(size_t id)` Clear timeout/interval with ID. Returns true if successful.
-- `void run(bool ex=0)` Run EventLoop in current thread. Set `ex` true to auto-exit when the queue ends.
+- `void run(bool ex=false)` Run EventLoop in current thread. Set `ex` true to auto-exit when the queue ends.
 - `void wait(mutex& m)` Locks and waits on mutex `m` to ensure that no timers interfere until `m` is unlocked.
 - `void stop()` Stop the EventLoop, causing `run` to exit. Fully thread-safe.
 
@@ -114,8 +115,8 @@ This dynamic class can append several data types, including Buffers, integers, s
 
 ### Functions
 - `int netStartServer(NetAddr a, int backlog)` Start server, listening at address/port `a`. Backlog is the length of the pending connections queue. A negative number is returned on error.
-- `Socket netAccept(int srv, bool nb=0)` Accept a client from the server. `nb` enables non-blocking mode after connection. A Socket with the `err` property set is returned on error.
-- `Socket netConnect(NetAddr a, bool nb=0)` Connect to a server at address/port `a`. `nb` enables non-blocking mode after connection. A Socket with the `err` property set is returned on error.
+- `Socket netAccept(int srv, bool nb=false)` Accept a client from the server. `nb` enables non-blocking mode after connection. A Socket with the `err` property set is returned on error.
+- `Socket netConnect(NetAddr a, bool nb=false)` Connect to a server at address/port `a`. `nb` enables non-blocking mode after connection. A Socket with the `err` property set is returned on error.
 - `void netClose(int s)` Close server.
 
 ### [struct] NetAddr
@@ -140,7 +141,7 @@ Represents a TCP socket. Do not call constructor.
 
 ### [struct] Dgram
 Represents a UDP datagram.
-- `Dgram(size_t buf=4096, bool nb=0)` Create datagram with receive buffer size `buf`. `nb` enables non-blocking mode. `err` is set on error.
+- `Dgram(size_t buf=4096, bool nb=false)` Create datagram with receive buffer size `buf`. `nb` enables non-blocking mode. `err` is set on error.
 - `send(NetAddr to, const char *buf, size_t len)`\
 `send(NetAddr to, string& s)` Send a packet to address/port. Returns data written, or negative on error.
 - `ssize_t recv(char *buf, size_t size, char **addr, uint16_t *port)` Receive directly to an external buffer. Returns data read, or negative on error. *Note: It's up to you to delete the buffer returned by `addr` when you are finished.*

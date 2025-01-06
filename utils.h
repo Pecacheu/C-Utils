@@ -1,4 +1,4 @@
-//C++ Utils v2.3.4, ©2021 Pecacheu; GNU GPL 3.0
+//C++ Utils, ©2025 Pecacheu; GNU GPL 3.0
 #pragma once
 
 #include <iostream>
@@ -16,6 +16,7 @@
 
 using namespace std;
 
+#define UTILS_VER "2.3.5"
 #ifndef UTILS_MAX_TIMERS
 	#define UTILS_MAX_TIMERS 65536
 #endif
@@ -81,13 +82,10 @@ struct Buffer {
 	Buffer(); Buffer(const size_t l);
 	Buffer(const char *b, const size_t l, bool d=1, bool n=0);
 	Buffer(const char *t); Buffer(const string& s);
-	inline string toStr() { return string(buf,len); }
-	inline string toStr(size_t s, size_t l=0) {
-		s=min(s,len-1); return string(buf+s,l?min(l,len-s):len-s);
-	}
+	string toStr(); string toStr(size_t s, size_t l=0);
 	const char *toCStr(bool f=0); Buffer copy(size_t nl=0);
 	string toBase64(); size_t toBase64(char *b);
-	Buffer sub(size_t o, size_t l=NPOS);
+	Buffer sub(size_t o, size_t l=NPOS, bool d=1);
 	bool match(const char *s); bool matchPart(const char *s, size_t ofs=0);
 	inline char& operator[](size_t i){ return (char&)buf[i]; }
 	void operator=(Buffer b); void del();
@@ -162,7 +160,7 @@ class Append {
 	private: static Buffer run(vector<Buffer> *ref) {
 		vector<Buffer>& arr=*ref; size_t al=arr.size(),s=0;
 		for(Buffer& b: arr) s+=b.len; char *a=new char[s+1], *o=a;
-		for(Buffer& b: arr) { memcpy(o,b.buf,b.len); o+=b.len; if(b.db) b.del(); }
+		for(Buffer& b: arr) { memcpy(o,b.buf,b.len); o+=b.len; b.del(); }
 		a[s]=0; return Buffer(a,s,1,1);
 	}
 	template<typename T, typename... U>
